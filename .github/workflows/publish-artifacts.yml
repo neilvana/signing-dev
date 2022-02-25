@@ -1,0 +1,37 @@
+name: Build and publish containers and charts
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  NIARTIFACTS_USER: ${{ secrets.NIARTIFACTS_USER }}
+  NIARTIFACTS_REGISTRY: niartifacts.jfrog.io
+  NIARTIFACTS_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
+  DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+  DOCKERHUB_REGISTRY: docker.io
+  DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+defaults:
+jobs:
+  build-publish-containers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Log into Artifactory
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ env.NIARTIFACTS_USER }}
+          password: ${{ env.NIARTIFACTS_PASSWORD}}
+          registry: ${{ env.NIARTIFACTS_REGISTRY }}
+      - name: Log into DockerHub
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ env.NIARTIFACTS_USER }}
+          password: ${{ env.NIARTIFACTS_PASSWORD}}
+          registry: ${{ env.NIARTIFACTS_REGISTRY }}
+      - name: Build container
+        run: podman build -t niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }} .
+      - name: Push container
+        run: podman push niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}

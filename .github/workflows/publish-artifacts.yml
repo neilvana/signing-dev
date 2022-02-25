@@ -13,7 +13,6 @@ env:
   DOCKERHUB_REGISTRY: docker.io
   DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-defaults:
 jobs:
   build-publish-containers:
     runs-on: ubuntu-latest

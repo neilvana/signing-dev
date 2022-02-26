@@ -37,9 +37,9 @@ jobs:
       - name: Print public key
         run: cat $RUNNER_TEMP/pubring.asc
       - name: Import Public Key
-        run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'cat $RUNNER_TEMP/pubring.asc | dos2unix | gpg --import'
+        run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'cat $RUNNER_TEMP/pubring.asc | gpg --import'
       - name: Import Private Key
-        run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'cat $RUNNER_TEMP/secring.asc | dos2unix | gpg --import'
+        run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'cat $RUNNER_TEMP/secring.asc | gpg --import'
       - name: Log into Artifactory
         uses: redhat-actions/podman-login@v1
         with:

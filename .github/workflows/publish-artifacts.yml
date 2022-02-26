@@ -12,6 +12,12 @@ env:
   DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
   DOCKERHUB_REGISTRY: docker.io
   DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+  GNUPGHOME: ${{ runner.temp }}/.gnupg
+  SIGSTORE: ${{ runner.temp }}/sigstore
+  PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
+  PUBLIC_KEY: ${{ secrets.NI_PUB_KEY }}
+  KEY_ID: ${{ secrets.NI_KEY_ID }}
+  IMAGE_TAG: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
 
 jobs:
   build-publish-containers:
@@ -31,6 +37,19 @@ jobs:
           password: ${{ env.NIARTIFACTS_PASSWORD}}
           registry: ${{ env.NIARTIFACTS_REGISTRY }}
       - name: Build container
-        run: podman build -t niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }} .
+        run: podman build -t $IMAGE_TAG .
       - name: Push container
-        run: podman push niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
+        run: podman push $IMAGE_TAG
+      - name: Create gnupghome
+        run: mkdir $GNUPGHOME
+      - name: Create sigstore directory
+        run: mkdir $SIGSTORE
+      - name: Import Private Key
+        run: echo $PRIVATE_KEY | gpg --import
+      - name: Import Public Key
+        run: echo $PUBLIC_KEY | gpg --import
+      - name: Sign image
+        run: podman image sign --sign-by $KEY_ID -d $SIGSTORE $IMAGE_TAG
+      - name: Show signatures
+        run: ls $SIGSTORE/rdsdck
+  

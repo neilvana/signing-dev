@@ -56,8 +56,6 @@ jobs:
         run: podman push $IMAGE_TAG
       - name: Sign image
         run: podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore docker://$IMAGE_TAG
-      - name: Show signatures
-        run: ls ${{ runner.temp }}/rdsdck
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

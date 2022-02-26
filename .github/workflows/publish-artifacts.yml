@@ -34,12 +34,10 @@ jobs:
         env:
           PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
         run: echo "$PRIVATE_KEY" | base64 --decode > $RUNNER_TEMP/secring.asc
-      - name: Print public key
-        run: cat $RUNNER_TEMP/pubring.asc
       - name: Import Public Key
-        run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'cat $RUNNER_TEMP/pubring.asc | gpg --import'
+        run: cat $RUNNER_TEMP/pubring.asc | gpg --import
       - name: Import Private Key
-        run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'cat $RUNNER_TEMP/secring.asc | gpg --import'
+        run: cat $RUNNER_TEMP/secring.asc | gpg --import
       - name: Log into Artifactory
         uses: redhat-actions/podman-login@v1
         with:
@@ -57,7 +55,7 @@ jobs:
       - name: Push container
         run: podman push $IMAGE_TAG
       - name: Sign image
-        run: GNUPGHOME=${{ runner.temp }}/gnupg podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore $IMAGE_TAG
+        run: podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore $IMAGE_TAG
       - name: Show signatures
         run: ls ${{ runner.temp }}/rdsdck
   

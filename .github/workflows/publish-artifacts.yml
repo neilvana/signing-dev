@@ -55,7 +55,14 @@ jobs:
       - name: Push container
         run: podman push $IMAGE_TAG
       - name: Sign image
-        run: podman image sign --sign-by $KEY_ID -d docker://${{ runner.temp }}/sigstore $IMAGE_TAG
+        run: podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore docker://$IMAGE_TAG
       - name: Show signatures
         run: ls ${{ runner.temp }}/rdsdck
-  
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Sync signatures to S3
+        run: aws s3 sync ${{ runner.temp }}/sigstore s3://signing-web-demo-bucket-1neyh347t53dt

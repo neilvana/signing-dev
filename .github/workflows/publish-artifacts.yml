@@ -45,11 +45,11 @@ jobs:
       - name: Create public key file
         env:
           PUBLIC_KEY: ${{ secrets.NI_PUB_KEY }}
-        run: echo $PUBLIC_KEY | base64 --decode > $RUNNER_TEMP/pubring.asc
+        run: echo "$PUBLIC_KEY" | base64 --decode > $RUNNER_TEMP/pubring.asc
       - name: Create private key file
         env:
           PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
-        run: echo $PRIVATE_KEY | base64 --decode > $RUNNER_TEMP/secring.asc
+        run: echo "$PRIVATE_KEY" | base64 --decode > $RUNNER_TEMP/secring.asc
       - name: Print public key
         run: cat $RUNNER_TEMP/pubring.asc
       - name: Import Public Key

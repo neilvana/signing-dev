@@ -22,22 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Log into Artifactory
-        uses: redhat-actions/podman-login@v1
-        with:
-          username: ${{ env.NIARTIFACTS_USER }}
-          password: ${{ env.NIARTIFACTS_PASSWORD}}
-          registry: ${{ env.NIARTIFACTS_REGISTRY }}
-      - name: Log into DockerHub
-        uses: redhat-actions/podman-login@v1
-        with:
-          username: ${{ env.NIARTIFACTS_USER }}
-          password: ${{ env.NIARTIFACTS_PASSWORD}}
-          registry: ${{ env.NIARTIFACTS_REGISTRY }}
-      - name: Build container
-        run: podman build -t $IMAGE_TAG .
-      - name: Push container
-        run: podman push $IMAGE_TAG
       - name: Create gnupghome
         run: mkdir ${{ runner.temp }}/gpg
       - name: Create sigstore directory
@@ -56,6 +40,22 @@ jobs:
         run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'cat $RUNNER_TEMP/pubring.asc | gpg --import'
       - name: Import Private Key
         run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'cat $RUNNER_TEMP/secring.asc | gpg --import'
+      - name: Log into Artifactory
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ env.NIARTIFACTS_USER }}
+          password: ${{ env.NIARTIFACTS_PASSWORD}}
+          registry: ${{ env.NIARTIFACTS_REGISTRY }}
+      - name: Log into DockerHub
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ env.NIARTIFACTS_USER }}
+          password: ${{ env.NIARTIFACTS_PASSWORD}}
+          registry: ${{ env.NIARTIFACTS_REGISTRY }}
+      - name: Build container
+        run: podman build -t $IMAGE_TAG .
+      - name: Push container
+        run: podman push $IMAGE_TAG
       - name: Sign image
         run: GNUPGHOME=${{ runner.temp }}/gnupg podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore $IMAGE_TAG
       - name: Show signatures

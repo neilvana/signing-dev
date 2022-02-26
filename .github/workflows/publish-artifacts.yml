@@ -42,10 +42,10 @@ jobs:
         run: mkdir ${{ runner.temp }}/gpg
       - name: Create sigstore directory
         run: mkdir ${{ runner.temp }}/sigstore
-      - name: Import Private Key
-        run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'echo "$PRIVATE_KEY" | gpg --import'
       - name: Import Public Key
         run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'echo "$PUBLIC_KEY" | gpg --import'
+      - name: Import Private Key
+        run: GNUPGHOME=${{ runner.temp }}/gnupg bash -c 'echo "$PRIVATE_KEY" | gpg --import'
       - name: Sign image
         run: GNUPGHOME=${{ runner.temp }}/gnupg podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore $IMAGE_TAG
       - name: Show signatures

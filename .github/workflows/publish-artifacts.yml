@@ -38,12 +38,20 @@ jobs:
         run: podman push $IMAGE_TAG
       - name: Create sigstore directory
         run: mkdir ${{ runner.temp }}/sigstore
+      - name: Create gnupghome directory
+        run: mkdir ${{ runner.temp }}/.gpg
       - name: Import Public Key
         run: echo "${{ secrets.NI_PUB_KEY }}" | base64 --decode | gpg --import
+        env:
+          GNUPGHOME: ${{ runner.temp }}/.gpg
       - name: Import Private Key
         run: echo "${{ secrets.NI_PRIVATE_KEY }}" | base64 --decode | gpg --import
+        env:
+          GNUPGHOME: ${{ runner.temp }}/.gpg
       - name: Sign image
         run: podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore docker://$IMAGE_TAG
+        env:
+          GNUPGHOME: ${{ runner.temp }}/.gpg
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

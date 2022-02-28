@@ -39,7 +39,7 @@ jobs:
       - name: Create sigstore directory
         run: mkdir ${{ runner.temp }}/sigstore
       - name: Import Public Key
-        run: echo "${{ secrets.NI_PUBLIC_KEY }}" | base64 --decode | gpg --import
+        run: echo "${{ secrets.NI_PUB_KEY }}" | base64 --decode | gpg --import
       - name: Import Private Key
         run: echo "${{ secrets.NI_PRIVATE_KEY }}" | base64 --decode | gpg --import
       - name: Sign image

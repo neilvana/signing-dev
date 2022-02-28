@@ -12,8 +12,6 @@ env:
   DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
   DOCKERHUB_REGISTRY: docker.io
   DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-
   KEY_ID: ${{ secrets.NI_KEY_ID }}
   IMAGE_TAG: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
 
@@ -41,9 +39,13 @@ jobs:
       - name: Create sigstore directory
         run: mkdir ${{ runner.temp }}/sigstore
       - name: Import Public Key
-        run: echo "${{ secrets.PUBLIC_KEY }}" | base64 --decode | gpg --import
+        run: echo "$PUBLIC_KEY" | base64 --decode | gpg --import
+        env:
+          PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
       - name: Import Private Key
-        run: echo "${{ secrets.PRIVATE_KEY }}" | base64 --decode | gpg --import
+        run: echo "$PRIVATE_KEY" | base64 --decode | gpg --import
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
       - name: Sign image
         run: podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore docker://$IMAGE_TAG
       - name: Configure AWS credentials

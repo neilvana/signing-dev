@@ -40,6 +40,8 @@ jobs:
         run: mkdir ${{ runner.temp }}/sigstore
       - name: Create gnupghome directory
         run: mkdir ${{ runner.temp }}/.gpg
+      - name: Set gnupghome permissions
+        run: chmod 700 ${{ runner.temp }}/.gpg
       - name: Import Public Key
         run: echo "${{ secrets.NI_PUB_KEY }}" | base64 --decode | gpg --import
         env:

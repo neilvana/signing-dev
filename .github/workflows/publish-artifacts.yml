@@ -41,9 +41,9 @@ jobs:
     uses: ni/workflows/.github/workflows/sign-container.yml@users/nstoddar/add-sign-container-workflow
     needs: build-publish-containers
     with:
-      gpg_key_id: ${{ env.GPG_KEY_ID }}
-      image_tag: ${{ env.IMAGE_TAG }}
-      registry_username: ${{ env.NIARTIFACTS_USER }}
+      gpg_key_id: '${{ env.GPG_KEY_ID }}'
+      image_tag: '${{ env.IMAGE_TAG }}'
+      registry_username: '${{ env.NIARTIFACTS_USER }}'
       signature_store_bucket: s3://signing-web-demo-bucket-1neyh347t53dt
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

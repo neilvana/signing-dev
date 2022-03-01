@@ -7,12 +7,10 @@ on:
 
 env:
   NIARTIFACTS_USER: ${{ secrets.NIARTIFACTS_USER }}
-  NIARTIFACTS_REGISTRY: niartifacts.jfrog.io
   NIARTIFACTS_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
   DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
   DOCKERHUB_REGISTRY: docker.io
   DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-  KEY_ID: ${{ secrets.NI_KEY_ID }}
   IMAGE_TAG: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
 
 jobs:
@@ -36,29 +34,17 @@ jobs:
         run: podman build -t $IMAGE_TAG .
       - name: Push container
         run: podman push $IMAGE_TAG
-      - name: Create sigstore directory
-        run: mkdir ${{ runner.temp }}/sigstore
-      - name: Create gnupghome directory
-        run: mkdir ${{ runner.temp }}/.gpg
-      - name: Set gnupghome permissions
-        run: chmod 700 ${{ runner.temp }}/.gpg
-      - name: Import Public Key
-        run: echo "${{ secrets.NI_PUB_KEY }}" | base64 --decode | gpg --import
-        env:
-          GNUPGHOME: ${{ runner.temp }}/.gpg
-      - name: Import Private Key
-        run: echo "${{ secrets.NI_PRIVATE_KEY }}" | base64 --decode | gpg --import
-        env:
-          GNUPGHOME: ${{ runner.temp }}/.gpg
-      - name: Sign image
-        run: podman image sign --sign-by $KEY_ID -d ${{ runner.temp }}/sigstore docker://$IMAGE_TAG
-        env:
-          GNUPGHOME: ${{ runner.temp }}/.gpg
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-      - name: Sync signatures to S3
-        run: aws s3 sync ${{ runner.temp }}/sigstore s3://signing-web-demo-bucket-1neyh347t53dt
+        
+  sign-container:
+    uses: ni/workflows/.github/workflows/sign-container.yml@users/nstoddar/add-sign-container-workflow
+    with:
+      gpg_key_id: ${{ secrets.NI_KEY_ID }}
+      image_tag: ${{ env.IMAGE_TAG }}
+      registry_username: ${{ secrets.NIARTIFACTS_USER }}
+      signature_store_bucket: s3://signing-web-demo-bucket-1neyh347t53dt
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
+      GPG_PUBLIC_KEY: ${{ secrets.NI_PUB_KEY }}
+      REGISTRY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}

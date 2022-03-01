@@ -39,6 +39,7 @@ jobs:
         
   sign-container:
     uses: ni/workflows/.github/workflows/sign-container.yml@users/nstoddar/add-sign-container-workflow
+    needs: build-publish-containers
     with:
       gpg_key_id: ${{ env.GPG_KEY_ID }}
       image_tag: ${{ env.IMAGE_TAG }}

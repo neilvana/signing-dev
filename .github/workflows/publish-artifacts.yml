@@ -30,21 +30,21 @@ jobs:
       - name: Push container
         run: podman push $IMAGE_TAG
         
-  sign-container:
-    uses: ni/workflows/.github/workflows/sign-container.yml@users/nstoddar/add-sign-container-workflow
-    needs: build-publish-containers
-    with:
-      image_tag: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
-      registry_username: neil.stoddard@ni.com
-      signature_store_bucket: s3://signing-web-demo-bucket-1neyh347t53dt
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
-      REGISTRY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
+  # sign-container:
+  #   uses: ni/workflows/.github/workflows/sign-container.yml@users/nstoddar/add-sign-container-workflow
+  #   needs: build-publish-containers
+  #   with:
+  #     image_tag: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
+  #     registry_username: neil.stoddard@ni.com
+  #     signature_store_bucket: s3://signing-web-demo-bucket-1neyh347t53dt
+  #   secrets:
+  #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #     GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
+  #     REGISTRY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
   
   pull-container-with-verify:
-    needs: sign-container
+    needs: build-publish-containers
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

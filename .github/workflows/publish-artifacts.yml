@@ -70,7 +70,7 @@ jobs:
       - name: Download chart
         run: helm pull rds-hlm/test-chart --version ${{ env.CHART_VERSION }}
       - name: Install signing plugin
-        run: helm plugin install https://github.com/technosophos/helm-gpg
+        run: helm plugin install https://github.com/neilvana/helm-gpg
       - name: Create gnupghome directory
         run: mkdir ${{ runner.temp }}/gpg && chmod 700 ${{ runner.temp }}/gpg
       - name: Import public key

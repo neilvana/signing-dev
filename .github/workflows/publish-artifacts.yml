@@ -60,30 +60,15 @@ jobs:
         run: curl -H "X-JFrog-Art-Api:${{ secrets.NIARTIFACTS_PASSWORD }}" -T ${{ runner.temp }}/test-chart-${{ env.CHART_VERSION }}.tgz "https://niartifacts.jfrog.io/artifactory/rds-hlm/ni/test-chart/test-chart-${{ env.CHART_VERSION }}.tgz"
 
   sign-chart:
-    runs-on: ubuntu-latest
+    uses: ni/workflows/.github/workflows/sign-chart.yml@users/nstoddar/add-sign-container-workflow
     needs: build-publish-chart
-    steps:
-      - name: Sign into helm
-        run: helm repo add rds-hlm https://niartifacts.jfrog.io/artifactory/api/helm/rds-hlm --username ${{ env.NIARTIFACTS_USER }} --password ${{ secrets.NIARTIFACTS_PASSWORD }}
-      - name: Update helm repo
-        run: helm repo update
-      - name: Download chart
-        run: helm pull rds-hlm/test-chart --version ${{ env.CHART_VERSION }}
-      - name: Install signing plugin
-        run: helm plugin install https://github.com/neilvana/helm-gpg
-      - name: Create gnupghome directory
-        run: mkdir ${{ runner.temp }}/gpg && chmod 700 ${{ runner.temp }}/gpg
-      - name: Import public key
-        run: echo "${{ secrets.NI_PUB_KEY }}" | base64 --decode | gpg --import
-        env:
-          GNUPGHOME: ${{ runner.temp }}/gpg
-      - name: Import private key
-        run: echo "${{ secrets.NI_PRIVATE_KEY }}" | base64 --decode | gpg --import
-        env:
-          GNUPGHOME: ${{ runner.temp }}/gpg
-      - name: Sign chart
-        run: helm gpg sign test-chart-${{ env.CHART_VERSION }}.tgz
-        env:
-          GNUPGHOME: ${{ runner.temp }}/gpg
-      - name: Publish providence file
-        run: curl -H "X-JFrog-Art-Api:${{ secrets.NIARTIFACTS_PASSWORD }}" -T test-chart-${{ env.CHART_VERSION }}.tgz.prov "https://niartifacts.jfrog.io/artifactory/rds-hlm/ni/test-chart/test-chart-${{ env.CHART_VERSION }}.tgz.prov"
+    with:
+      chart: test-chart
+      repository_name: rds-hlm
+      repository_path: /ni/test-chart/
+      repository_user: neil.stoddard@ni.com
+      version: '0.1.${{ github.run_id }}'
+    secrets:
+      GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
+      GPG_PUBLIC_KEY: ${{ secrets.NI_PUB_KEY }}
+      REPOSITORY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}      

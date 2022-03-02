@@ -10,7 +10,6 @@ env:
   NIARTIFACTS_USER: ${{ secrets.NIARTIFACTS_USER }}
   NIARTIFACTS_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
   DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
-  DOCKERHUB_REGISTRY: docker.io
   DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
   IMAGE_TAG: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
 
@@ -24,13 +23,13 @@ jobs:
         with:
           username: ${{ env.NIARTIFACTS_USER }}
           password: ${{ env.NIARTIFACTS_PASSWORD}}
-          registry: ${{ env.NIARTIFACTS_REGISTRY }}
+          registry: niartifacts.jfrog.io
       - name: Log into DockerHub
         uses: redhat-actions/podman-login@v1
         with:
-          username: ${{ env.NIARTIFACTS_USER }}
-          password: ${{ env.NIARTIFACTS_PASSWORD}}
-          registry: ${{ env.NIARTIFACTS_REGISTRY }}
+          username: ${{ env.DOCKERHUB_USER }}
+          password: ${{ env.DOCKERHUB_REGISTRY}}
+          registry: docker.io
       - name: Build container
         run: podman build -t $IMAGE_TAG .
       - name: Push container

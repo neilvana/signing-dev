@@ -28,7 +28,7 @@ jobs:
         uses: redhat-actions/podman-login@v1
         with:
           username: ${{ env.DOCKERHUB_USER }}
-          password: ${{ env.DOCKERHUB_REGISTRY}}
+          password: ${{ env.DOCKERHUB_PASSWORD}}
           registry: docker.io
       - name: Build container
         run: podman build -t $IMAGE_TAG .

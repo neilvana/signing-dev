@@ -57,9 +57,9 @@ jobs:
       - name: Create podman config directory
         run: mkdir -p ${{ runner.temp }}/.config/containers/registries.d
       - name: Configure registry store
-        run: ln -s default-registries.yaml ${{ runner.temp }}/.config/containers/registries.d/default.yaml
+        run: cp default-registries.yaml ${{ runner.temp }}/.config/containers/registries.d/default.yaml
       - name: Configure policy
-        run: ln -s policy.json ${{ runner.temp }}/.config/containers/policy.json
+        run: cp policy.json ${{ runner.temp }}/.config/containers/policy.json
       - name: Pull with verify
         run: podman pull niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
         env:

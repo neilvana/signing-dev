@@ -82,7 +82,7 @@ jobs:
         env:
           GNUPGHOME: ${{ runner.temp }}/gpg
       - name: Sign chart
-        run: helm sign test-chart-${{ env.CHART_VERSION }}.tgz
+        run: helm gpg sign test-chart-${{ env.CHART_VERSION }}.tgz
         env:
           GNUPGHOME: ${{ runner.temp }}/gpg
       - name: Publish providence file

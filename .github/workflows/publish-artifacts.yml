@@ -43,6 +43,30 @@ jobs:
       GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
       REGISTRY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
   
+  pull-container-with-verify:
+    needs: sign-container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Log into Artifactory
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ secrets.NIARTIFACTS_USER }}
+          password: ${{ secrets.NIARTIFACTS_PASSWORD }}
+          registry: niartifacts.jfrog.io
+      - name: Create podman config directory
+        run: mkdir -p ${{ runner.temp }}/.config/containers/registries.d
+      - name: Configure registry store
+        run: ln -s default-registries.yaml ${{ runner.temp }}/.config/containers/registries.d/default.yaml
+      - name: Get public key
+        run: echo "${{ secrets.NI_PUB_KEY }}" | base64 --decode > ${{ runner.temp }}/pub.key
+      - name: Setup policy
+        run: podman image trust set --pubkeysfile ${{ runner.temp }}/pub.key niartifacts.jfrog.io
+        env:
+          HOME: ${{ runner.temp }}
+      - name: Pull with verify
+        run: podman pull niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
+
   build-publish-chart:
     runs-on: ubuntu-latest
     env:
@@ -66,3 +90,23 @@ jobs:
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
       REPOSITORY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}      
+
+  pull-chart-with-verify:
+    needs: sign-chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sign into helm
+        run: helm repo add rds-hlm https://niartifacts.jfrog.io/artifactory/rds-hlm --username neil.stoddard@ni.com --password ${{ secrets.NIARTIFACTS_PASSWORD }}
+      - name: Create gnupghome directory
+        run: mkdir ${{ runner.temp }}/gpg && chmod 700 ${{ runner.temp }}/gpg
+      - name: Import public key
+        run: echo "${{ secrets.NI_PUB_KEY }}" | base64 --decode | gpg --import
+        env:
+          GNUPGHOME: ${{ runner.temp }}/gpg
+      - name: Export binary public key for verification
+        run: gpg --output ${{ runner.temp }}/pubring.gpg --export
+        env:
+          GNUPGHOME: ${{ runner.temp }}/gpg
+      - name: Pull chart with verify
+        run: helm pull --verify --keyring ${{ runner.temp }}/pubring.gpg --version '0.1.${{ github.run_id }}' rds-hlm/test-chart
+       

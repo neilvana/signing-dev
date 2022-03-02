@@ -1,0 +1,3 @@
+docker:
+  niartifacts.jfrog.io:
+    sigstore: https://verify-dev.ion.ni.com

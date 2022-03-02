@@ -61,6 +61,7 @@ jobs:
   
   sign-chart:
     runs-on: ubuntu-latest
+    needs: build-publish-chart
     steps:
       - name: Sign into helm
         run: helm repo add rds-hlm https://niartifacts.jfrog.io/artifactory/api/helm/rds-hlm --username ${{ env.NIARTIFACTS_USER }} --password ${{ secrets.NIARTIFACTS_PASSWORD }}

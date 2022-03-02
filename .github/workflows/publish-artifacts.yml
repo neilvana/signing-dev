@@ -12,39 +12,77 @@ env:
   DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
   DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
   IMAGE_TAG: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
+  CHART_VERSION: '0.1.${{ github.run_id }}'
 
 jobs:
-  build-publish-containers:
+  # build-publish-containers:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Log into Artifactory
+  #       uses: redhat-actions/podman-login@v1
+  #       with:
+  #         username: ${{ env.NIARTIFACTS_USER }}
+  #         password: ${{ env.NIARTIFACTS_PASSWORD}}
+  #         registry: niartifacts.jfrog.io
+  #     - name: Log into DockerHub
+  #       uses: redhat-actions/podman-login@v1
+  #       with:
+  #         username: ${{ env.DOCKERHUB_USER }}
+  #         password: ${{ env.DOCKERHUB_PASSWORD}}
+  #         registry: docker.io
+  #     - name: Build container
+  #       run: podman build -t $IMAGE_TAG .
+  #     - name: Push container
+  #       run: podman push $IMAGE_TAG
+        
+  # sign-container:
+  #   uses: ni/workflows/.github/workflows/sign-container.yml@users/nstoddar/add-sign-container-workflow
+  #   needs: build-publish-containers
+  #   with:
+  #     image_tag: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
+  #     registry_username: neil.stoddard@ni.com
+  #     signature_store_bucket: s3://signing-web-demo-bucket-1neyh347t53dt
+  #   secrets:
+  #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #     GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
+  #     GPG_PUBLIC_KEY: ${{ secrets.NI_PUB_KEY }}
+  #     REGISTRY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
+  
+  build-publish-chart:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Log into Artifactory
-        uses: redhat-actions/podman-login@v1
-        with:
-          username: ${{ env.NIARTIFACTS_USER }}
-          password: ${{ env.NIARTIFACTS_PASSWORD}}
-          registry: niartifacts.jfrog.io
-      - name: Log into DockerHub
-        uses: redhat-actions/podman-login@v1
-        with:
-          username: ${{ env.DOCKERHUB_USER }}
-          password: ${{ env.DOCKERHUB_PASSWORD}}
-          registry: docker.io
-      - name: Build container
-        run: podman build -t $IMAGE_TAG .
-      - name: Push container
-        run: podman push $IMAGE_TAG
-        
-  sign-container:
-    uses: ni/workflows/.github/workflows/sign-container.yml@users/nstoddar/add-sign-container-workflow
-    needs: build-publish-containers
-    with:
-      image_tag: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
-      registry_username: neil.stoddard@ni.com
-      signature_store_bucket: s3://signing-web-demo-bucket-1neyh347t53dt
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
-      GPG_PUBLIC_KEY: ${{ secrets.NI_PUB_KEY }}
-      REGISTRY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
+      - uses: actions/checkout@v3
+      - name: Build chart package
+        run: helm package test-chart --destination ${{ runner.temp }} --version ${{ env.CHART_VERSION }}
+      - name: Publish chart
+        run: curl -H "X-JFrog-Art-Api:${{ secrets.NIARTIFACTS_PASSWORD }}" ${{ runner.temp }}/test-chart-${{ env.CHART_VERSION }}.tgz "https://niartifacts.jfrog.io/artifactory/rds-hlm/ni/test-chart/test-chart-${{ env.CHART_VERSION }}.tgz"
+  
+  sign-chart:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sign into helm
+        run: helm repo add rds-hlm https://niartifacts.jfrog.io/artifactory/api/helm/rds-hlm --username ${{ env.NIARTIFACTS_USER }} --password ${{ secrets.NIARTIFACTS_PASSWORD }}
+      - name: Update helm repo
+        run: helm repo update
+      - name: Download chart
+        run: helm pull rds-hlm/test-chart --version ${{ env.CHART_VERSION }}
+      - name: Install signing plugin
+        run: helm plugin install https://github.com/technosophos/helm-gpg
+      - name: Create gnupghome directory
+        run: mkdir ${{ runner.temp }}/gpg && chmod 700 ${{ runner.temp }}/gpg
+      - name: Import public key
+        run: echo "${{ secrets.NI_PUB_KEY }}" | base64 --decode | gpg --import
+        env:
+          GNUPGHOME: ${{ runner.temp }}/gpg
+      - name: Import private key
+        run: echo "${{ secrets.NI_PRIVATE_KEY }}" | base64 --decode | gpg --import
+        env:
+          GNUPGHOME: ${{ runner.temp }}/gpg
+      - name: Sign chart
+        run: helm sign test-chart-${{ env.CHART_VERSION }}.tgz
+        env:
+          GNUPGHOME: ${{ runner.temp }}/gpg
+      - name: Publish providence file
+        run: curl -H "X-JFrog-Art-Api:${{ secrets.NIARTIFACTS_PASSWORD }}" test-chart-${{ env.CHART_VERSION }}.tgz.prov "https://niartifacts.jfrog.io/artifactory/rds-hlm/ni/test-chart/test-chart-${{ env.CHART_VERSION }}.tgz.prov"

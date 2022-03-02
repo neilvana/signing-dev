@@ -7,6 +7,10 @@ on:
   workflow_dispatch:
 
 env:
+  NIARTIFACTS_USER: ${{ secrets.NIARTIFACTS_USER }}
+  NIARTIFACTS_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
+  DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+  DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
   IMAGE_TAG: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
   CHART_VERSION: '0.1.${{ github.run_id }}'
 
@@ -18,14 +22,14 @@ jobs:
       - name: Log into Artifactory
         uses: redhat-actions/podman-login@v1
         with:
-          username: ${{ secrets.NIARTIFACTS_USER }}
-          password: ${{ secrets.NIARTIFACTS_PASSWORD }}
+          username: ${{ env.NIARTIFACTS_USER }}
+          password: ${{ env.NIARTIFACTS_PASSWORD}}
           registry: niartifacts.jfrog.io
       - name: Log into DockerHub
         uses: redhat-actions/podman-login@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USER }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: ${{ env.DOCKERHUB_USER }}
+          password: ${{ env.DOCKERHUB_PASSWORD}}
           registry: docker.io
       - name: Build container
         run: podman build -t $IMAGE_TAG .
@@ -43,6 +47,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
+      GPG_PUBLIC_KEY: ${{ secrets.NI_PUB_KEY }}
       REGISTRY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}
   
   build-publish-chart:
@@ -65,4 +70,5 @@ jobs:
       version: '0.1.${{ github.run_id }}'
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.NI_PRIVATE_KEY }}
+      GPG_PUBLIC_KEY: ${{ secrets.NI_PUB_KEY }}
       REPOSITORY_PASSWORD: ${{ secrets.NIARTIFACTS_PASSWORD }}      

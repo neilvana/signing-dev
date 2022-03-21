@@ -8,4 +8,5 @@ reusable workflows in the ni organization.  There is a single workflow included 
 
 This workflow builds, publishes and signs both a helm chart and a container image.
 
-The workflow also validates the signatures were correctly applied.
+The workflow also validates the signatures were correctly applied by verifying signatures when
+pulling images.

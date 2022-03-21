@@ -31,7 +31,7 @@ jobs:
         run: podman push $IMAGE_TAG
         
   sign-container:
-    uses: ni/workflows/.github/workflows/sign-container.yml@users/nstoddar/add-sign-container-workflow
+    uses: ni/workflows/.github/workflows/sign-container.yml@main
     needs: build-publish-containers
     with:
       image_tag: niartifacts.jfrog.io/rdsdck/test-image:${{ github.run_id }}
@@ -80,7 +80,7 @@ jobs:
         run: curl -H "X-JFrog-Art-Api:${{ secrets.NIARTIFACTS_PASSWORD }}" -T ${{ runner.temp }}/test-chart-${{ env.CHART_VERSION }}.tgz "https://niartifacts.jfrog.io/artifactory/rds-hlm/ni/test-chart/test-chart-${{ env.CHART_VERSION }}.tgz"
 
   sign-chart:
-    uses: ni/workflows/.github/workflows/sign-chart.yml@users/nstoddar/add-sign-container-workflow
+    uses: ni/workflows/.github/workflows/sign-chart.yml@main
     needs: build-publish-chart
     with:
       chart: test-chart
